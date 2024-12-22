@@ -29,7 +29,11 @@ class RoomResource extends JsonResource
                 'name' => $this->apartment ? $this->apartment->name : null, // Check if apartment exists
                 'building_name' => $this->apartment->building ? $this->apartment->building->name : null, // Check if apartment exists
             ],
-
+            'building' => [
+                'id' => $this->apartment->building ?$this->apartment->building->id : null, // Check if
+                'name' => $this->apartment->building ? $this->apartment->building->name : null, // Check if apartment exists
+            ],
+            'gender' => $this->gender,
             'has_bathroom' => $this->has_bathroom,
             'has_balcony' => $this->has_balcony,
         ];

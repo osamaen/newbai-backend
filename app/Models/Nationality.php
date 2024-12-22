@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ReservationStatus extends Model
+class Nationality extends Model
 {
     use HasFactory;
+    protected $guarded= [];
 
 
-    public function reservations()
+    public function customers()
     {
-        return $this->hasMany(Reservation::class, 'status_id');
+        return $this->hasMany(Customer::class);
     }
 }

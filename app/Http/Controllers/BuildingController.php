@@ -7,6 +7,10 @@ use App\Http\Requests\StoreBuildingRequest;
 use App\Http\Requests\UpdateBuildingRequest;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\BuildingResource;
+use Illuminate\Validation\ValidationException;
+use Exception;
+use Illuminate\Validation\ValidationData;
+
 class BuildingController extends ApiController
 {
     /**
@@ -69,14 +73,40 @@ class BuildingController extends ApiController
      */
     public function update(UpdateBuildingRequest $request, Building $building)
     {
-        //
+        try {
+            // تحديث بيانات المبنى بالبيانات الصحيحة
+            $building->update($request->validated());
+            // إعادة استجابة بنجاح مع البيانات المحدثة
+            return $this->okResponse(['building' => $building], 'Building updated successfully');
+        } catch (ValidationException  $e) {
+            // إذا حدثت أخطاء تحقق من الصحة
+            return $this->unprocessableResponse($e, 'Validation Error');
+        } catch (Exception $e) {
+            // لمعالجة أي أخطاء أخرى غير متوقعة
+            return $this->errorResponse([], 'An unexpected error occurred', 500);
+        }
     }
 
+    
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Building $building)
-    {
-        //
+{
+    try {
+        // التحقق مما إذا كان المبنى يحتوي على شقق
+        if ($building->apartments()->count() > 0) {
+            return $this->unprocessableResponse(
+                null,
+                'Building cannot be deleted because it has associated apartments.'
+            );
+        }
+
+        // حذف المبنى إذا لم يكن يحتوي على شقق
+        $building->delete();
+        return $this->okResponse(null, 'Building deleted successfully');
+    } catch (Exception $e) {
+        return $this->unprocessableResponse($e->getMessage(), 'Failed to delete the building');
     }
+}
 }

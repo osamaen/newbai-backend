@@ -24,7 +24,6 @@ class RoomController extends ApiController
 
     public function getBedSpaces($id)
     {
-        Log::info('Room ID: ' . $id);
 
         $room = Room::findOrFail($id); // Find room by ID
          $bedSpaces = $room->bed_spaces;  // Fetch the related bed spaces for the room
@@ -43,77 +42,82 @@ class RoomController extends ApiController
             'room_type_id' => 'nullable|integer',
             'has_balcony' => 'nullable|boolean',
             'has_bathroom' => 'nullable|boolean',
+            'gender_id' => 'nullable|integer',
         ]);
     
-        // استعلام الغرف المتاحة بناءً على تواريخ الحجز
-        $query = Room::with(['room_type', 'apartment', 'bed_spaces'])
-        ->whereDoesntHave('room_reservations.reservation', function($q) use ($request) {
-            $q->where(function($query) use ($request) {
-                $query->whereBetween('check_in_date', [$request->check_in_date, $request->check_out_date])
-                    ->orWhereBetween('check_out_date', [$request->check_in_date, $request->check_out_date])
-                    ->orWhere(function($q) use ($request) {
-                        $q->where('check_in_date', '<=', $request->check_in_date)
-                          ->where('check_out_date', '>=', $request->check_out_date);
-                    });
-            })
-            ->where('is_checked_out', false);
-        });
-
-    // Apply filters
-    if ($request->room_type_id) {
-        $query->where('room_type_id', $request->room_type_id);
-    }
-
-    if ($request->min_price) {
-        $query->where('price', '>=', $request->min_price);
-    }
-
-    if ($request->building_id) {
-        $query->whereHas('apartment', function($q) use ($request) {
-            $q->where('building_id', $request->building_id);
-        });
-    }
+        // Define statuses that affect room availability
+        $unavailableStatuses = [1, 2, 3, 10]; // Example: Pending, Confirmed, Checked-In, Partially Paid
     
-    if ($request->apartment_id) {
-        $query->where('apartment_id', $request->apartment_id);
-    }
-    if ($request->max_price) {
-        $query->where('price', '<=', $request->max_price);
-    }
-
-    if ($request->has_bathroom) {
-        $query->where('has_bathroom', $request->has_bathroom);
-    }
-
-    if ($request->has_balcony) {
-        $query->where('has_balcony', $request->has_balcony);
-    }
-
-    // For bedspace rooms
-    if ($request->room_type_id == 3) { // Assuming 3 is bedspace type
-        $query->whereHas('bed_spaces', function($q) use ($request) {
-            $q->whereDoesntHave('bedspace_reservations.reservation', function($q) use ($request) {
-                $q->where(function($query) use ($request) {
+        // Query rooms that are not reserved under these conditions
+        $query = Room::with(['room_type', 'apartment', 'bed_spaces'])
+            ->whereDoesntHave('room_reservations.reservation', function ($q) use ($request, $unavailableStatuses) {
+                $q->where(function ($query) use ($request) {
                     $query->whereBetween('check_in_date', [$request->check_in_date, $request->check_out_date])
                         ->orWhereBetween('check_out_date', [$request->check_in_date, $request->check_out_date])
-                        ->orWhere(function($q) use ($request) {
+                        ->orWhere(function ($q) use ($request) {
                             $q->where('check_in_date', '<=', $request->check_in_date)
-                              ->where('check_out_date', '>=', $request->check_out_date);
+                                ->where('check_out_date', '>=', $request->check_out_date);
                         });
                 })
+                ->whereIn('status_id', $unavailableStatuses) // Check for unavailable statuses
                 ->where('is_checked_out', false);
             });
-        });
-    }
-
-    return response()->json([
-        'data' => [
-            'rooms' => [$query->get()]
-        ]
-    ]);
     
-     
+        // Apply filters
+        if ($request->room_type_id) {
+            $query->where('room_type_id', $request->room_type_id);
+        }
+        if ($request->gender_id) {
+            $query->where('gender_id', $request->gender_id);
+        }
+    
+        if ($request->min_price) {
+            $query->where('price', '>=', $request->min_price);
+        }
+    
+        if ($request->building_id) {
+            $query->whereHas('apartment', function ($q) use ($request) {
+                $q->where('building_id', $request->building_id);
+            });
+        }
+    
+        if ($request->apartment_id) {
+            $query->where('apartment_id', $request->apartment_id);
+        }
+    
+        if ($request->max_price) {
+            $query->where('price', '<=', $request->max_price);
+        }
+    
+        if ($request->has_bathroom) {
+            $query->where('has_bathroom', $request->has_bathroom);
+        }
+    
+        if ($request->has_balcony) {
+            $query->where('has_balcony', $request->has_balcony);
+        }
+    
+        // For bedspace rooms
+        if ($request->room_type_id == 3) { // Assuming 3 is bedspace type
+            $query->whereHas('bed_spaces', function ($q) use ($request, $unavailableStatuses) {
+                $q->whereDoesntHave('bedspace_reservations.reservation', function ($q) use ($request, $unavailableStatuses) {
+                    $q->where(function ($query) use ($request) {
+                        $query->whereBetween('check_in_date', [$request->check_in_date, $request->check_out_date])
+                            ->orWhereBetween('check_out_date', [$request->check_in_date, $request->check_out_date])
+                            ->orWhere(function ($q) use ($request) {
+                                $q->where('check_in_date', '<=', $request->check_in_date)
+                                    ->where('check_out_date', '>=', $request->check_out_date);
+                            });
+                    })
+                    ->whereIn('status_id', $unavailableStatuses) // Check for unavailable statuses
+                    ->where('is_checked_out', false);
+                });
+            });
+        }
+    
+        return $this->okResponse(['rooms' => [RoomResource::collection($query->get())]]);
     }
+    
     
     /**
      * Show the form for creating a new resource.
@@ -137,6 +141,7 @@ class RoomController extends ApiController
         'apartment_id' => 'required|exists:apartments,id',
         'has_bathroom' => 'boolean',
         'has_balcony' => 'boolean',
+        'gender_id' => 'required|exists:genders,id',
         'bed_spaces' => 'nullable|array', // For bed spaces
         'bed_spaces.*.bed_number' => 'required_with:bed_spaces|string|max:20',
         'bed_spaces.*.position_description' => 'nullable|string',
@@ -152,6 +157,7 @@ class RoomController extends ApiController
             'apartment_id' => $validatedData['apartment_id'],
             'has_bathroom' => $validatedData['has_bathroom'] ?? false,
             'has_balcony' => $validatedData['has_balcony'] ?? false,
+            'gender_id' => $validatedData['gender_id'] ?? false,
         ]);
 
         // Check if the room type is Bed Space

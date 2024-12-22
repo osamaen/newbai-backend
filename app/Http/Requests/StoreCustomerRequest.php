@@ -11,7 +11,7 @@ class StoreCustomerRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,19 @@ class StoreCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:customers,email',
+            'phone_number' => 'required|string|max:255',
+            'lead_source_id' => 'nullable|string|max:20',
+            'lead_by' => 'nullable|string|max:20',
+            'note' => 'nullable|string',
+            'nationality_id' => 'required|exists:nationalities,id',
+            'gender_id' => 'required',
+            'date_of_birth' => 'nullable|date',
+            'personal_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'id_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
     }
 }

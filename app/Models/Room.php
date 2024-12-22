@@ -26,6 +26,12 @@ class Room extends Model
         return $this->hasMany(RoomReservation::class);
     }
 
+
+    public function gender()
+    {
+        return $this->belongsTo(Gender::class);
+    }
+    
     public function reservations()
     {
         return $this->hasManyThrough(Reservation::class, RoomReservation::class);

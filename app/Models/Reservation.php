@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Reservation extends Model
 {
     use HasFactory;
-
+    protected $guarded= [];
     public function getNoticeDeadlineAttribute()
 {
     return $this->check_out_date->subDays($this->notice_period_days);

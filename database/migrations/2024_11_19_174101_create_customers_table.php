@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
+            $table->integer('nationality_id')->unsigned()->nullable();
+            $table->integer('gender_id')->unsigned()->nullable();
             $table->string('id_photo');
             $table->string('id_number');
             $table->string('passport_photo');

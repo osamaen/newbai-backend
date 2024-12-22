@@ -6,7 +6,7 @@ use App\Models\StudentStatuses;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ServiceResource extends JsonResource
+class LeadSourceResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,12 +18,7 @@ class ServiceResource extends JsonResource
     {
         return [
             'id'    => $this->id,
-            'city'   => $this->city->name ,
-            'title' => $this->title,
-            'clinic' => $this->room->name,
-            'status' => $this->activation,
-            'actions'   => "",
-
+            'name'    => $this->name,
         ];
     }
 }

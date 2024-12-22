@@ -5,18 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RoomReservation extends Model
+class Employee extends Model
 {
     use HasFactory;
     protected $guarded= [];
-    public function reservation()
+    public function nationality()
     {
-        return $this->belongsTo(Reservation::class);
+        return $this->belongsTo(Nationality::class);
     }
-
-    public function room()
+    public function gender()
     {
-        return $this->belongsTo(Room::class);
+        return $this->belongsTo(Gender::class);
     }
-    
 }

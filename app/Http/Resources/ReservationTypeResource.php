@@ -19,6 +19,7 @@ class ReservationTypeResource extends JsonResource
         return [
             'id'    => $this->id,
             'name'    => $this->name,
+            'minimum_stay_days'    => $this->minimum_stay_days,
             'actions'   => "",
          
         ];

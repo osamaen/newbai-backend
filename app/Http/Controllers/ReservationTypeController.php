@@ -15,8 +15,9 @@ class ReservationTypeController extends ApiController
     public function index()
     {
         $reservation_type = ReservationType::get();
-        return $this->okResponse(['reservation_type'=> [ReservationTypeResource::collection($reservation_type)]]);
+        return $this->okResponse(['reservation_types'=> [ReservationTypeResource::collection($reservation_type)]]);
     }
+  
 
     /**
      * Show the form for creating a new resource.

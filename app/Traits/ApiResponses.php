@@ -178,15 +178,13 @@ trait ApiResponses
      * @param  string  $message
      * @return JsonResponse
      */
-    public function unprocessableResponse(mixed $data, string $message = ''): JsonResponse | RedirectResponse
+    public function unprocessableResponse(mixed $data = null, string $message = ''): JsonResponse | RedirectResponse
     {
-        if(request()->wantsJson()){
-            return $this->errorResponse($data->errors() , $message, Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-        else{
-            // dd($data->errors());
-            // return back()->with('error','zcxxzcczx');
-            return   $this->errorResponse($message, Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (request()->wantsJson()) {
+            $errors = $data && method_exists($data, 'errors') ? $data->errors() : null;
+            return $this->errorResponse($errors, $message, Response::HTTP_UNPROCESSABLE_ENTITY);
+        } else {
+            return $this->errorResponse($message, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
 }
